@@ -16,10 +16,10 @@ func main() {
 }
 
 func UploadPage(w http.ResponseWriter, r *http.Request) {
-	uri := r.RequestURI
+	//uri := r.RequestURI
+	//fmt.Fprintf(w, uri)
 	uname := r.FormValue("uname")
 	fmt.Fprintf(w, uname)
-	fmt.Fprintf(w, uri)
 }
 
 //func main() {
