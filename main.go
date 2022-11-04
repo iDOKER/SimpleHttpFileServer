@@ -3,39 +3,77 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
+var baseDir string = "/opt"
+var uploadDir string = "/tmp"
+
 func main() {
-	fmt.Println("Hello, World!")
-	//var basedir = flag.String("share", ".", "Share files in this DIR")
+	fmt.Println("Hi, There!")
+	//flag.StringVar(&baseDir, "base", "/opt", "Share files in this directory")
+	//flag.StringVar(&uploadDir, "upload", "/tmp", "Upload files to this directory")
 	flag.Parse()
 
-	http.HandleFunc("/", UploadPage)
+	http.HandleFunc("/", handlePage)
+	http.HandleFunc("/upload", handleUploadPage)
 	http.ListenAndServe("localhost:8080", nil)
 }
 
-func UploadPage(w http.ResponseWriter, r *http.Request) {
+func handlePage(res http.ResponseWriter, req *http.Request) {
 	//uri := r.RequestURI
 	//fmt.Fprintf(w, uri)
-	uname := r.FormValue("uname")
-	fmt.Fprintf(w, uname)
+	key := req.FormValue("key")
+	fmt.Fprintf(res, key)
 }
 
-//func main() {
-//	// 解析url地址
-//	u, err := url.Parse("http://bing.com/search?q=dotnet")
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	// 打印格式化的地址信息
-//	fmt.Println(u.Scheme) // 返回协议
-//	fmt.Println(u.Host) // 返回域名
-//	fmt.Println(u.Path) // 返回路径部分
-//	fmt.Println(u.RawQuery) // 返回url的参数部分
-//
-//	params := u.Query() // 以url.Values数据类型的形式返回url参数部分,可以根据参数名读写参数
-//
-//	fmt.Println(params.Get("q")) // 读取参数q的值
-//}
+func handleUploadPage(w http.ResponseWriter, req *http.Request) {
+
+	var names []string
+
+	w.WriteHeader(http.StatusOK)
+	uname := req.FormValue("uname")
+	fmt.Println(uname)
+
+	r, err := req.MultipartReader()
+	if err == nil {
+		f, err := r.ReadForm(20 * 1024 * 1024)
+		if err == nil {
+			for k, v := range f.File {
+				fmt.Printf("File:%s\n", k)
+				for i := 0; i < len(v); i++ {
+					var filename string
+					for n := 1; true; n++ {
+						filename = filepath.Join(uploadDir, fmt.Sprintf("%v-%v", n, v[i].Filename))
+						_, err := os.Stat(filename)
+						if err != nil {
+							break
+						}
+					}
+					of1, _ := os.Create(filename)
+					if1, _ := v[i].Open()
+					for n, _ := io.Copy(of1, if1); n > 0; n, _ = io.Copy(of1, if1) {
+					}
+					names = append(names, v[i].Filename)
+					fmt.Printf("%s\n", filename)
+					//of1.Close()
+					if1.Close()
+				}
+			}
+		} else {
+			log.Println("ReadForm:" + err.Error())
+			//resp.Write([]byte("Error"))
+			//return
+		}
+	}
+	//t := template.New("")
+	//_, err = t.Parse(tmplUpload)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//t.Execute(w, names)
+}
