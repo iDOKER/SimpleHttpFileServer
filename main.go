@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 )
 
 var baseDir string = "/Users/stan/Downloads"
@@ -24,7 +22,6 @@ func main() {
 
 	http.HandleFunc("/", handlePage)
 	http.HandleFunc("/upload", handleUploadPage)
-	http.HandleFunc("/uploadone", uploadOne)
 	http.ListenAndServe("127.0.0.1:8099", nil)
 }
 
@@ -35,7 +32,7 @@ func handlePage(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(res, key)
 }
 
-func uploadOne(w http.ResponseWriter, r *http.Request) {
+func handleUploadPage(w http.ResponseWriter, r *http.Request) {
 
 	UserName := r.FormValue("uname")
 	fmt.Println(UserName)
@@ -82,69 +79,4 @@ func uploadOne(w http.ResponseWriter, r *http.Request) {
 		}
 		SysFlag = 0
 	}
-}
-
-func handleUploadPage(w http.ResponseWriter, req *http.Request) {
-
-	var names []string
-
-	w.WriteHeader(http.StatusOK)
-	uname := req.FormValue("uname")
-	fmt.Println(uname)
-
-	var userDir = uploadDir + "/" + uname
-
-	fmt.Println(userDir)
-
-	r, err := req.MultipartReader()
-	fmt.Println(err)
-	if err == nil {
-		fmt.Println("2")
-		f, err := r.ReadForm(20 * 1024 * 1024)
-		if err == nil {
-			for k, v := range f.File {
-				fmt.Printf("File:%s\n", k)
-				for i := 0; i < len(v); i++ {
-					var filename string
-					for n := 1; true; n++ {
-						filename = filepath.Join(uploadDir, fmt.Sprintf("%v-%v", n, v[i].Filename))
-						_, err := os.Stat(filename)
-						if err != nil {
-							break
-						}
-					}
-					fmt.Println(filename)
-					of1, _ := os.Create(filename)
-					if1, _ := v[i].Open()
-					for n, _ := io.Copy(of1, if1); n > 0; n, _ = io.Copy(of1, if1) {
-					}
-					names = append(names, v[i].Filename)
-					fmt.Printf("%s\n", filename)
-					of1.Close()
-					if1.Close()
-				}
-			}
-		} else {
-			log.Println("ReadForm:" + err.Error())
-			//resp.Write([]byte("Error"))
-			//return
-		}
-	}
-	t := template.New("")
-	_, err = t.Parse(`<html><head>
-	<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
-	<meta name="viewport" content="width=device-width,initial-scale=1.0">
-	<title>上传文件</title>
-</head>
-<body>
-<form method="post" action="/uploadone" enctype="multipart/form-data">
-    <input type="file" name="file" multiple="multiple" />
-    <input type="submit" value="上传">
-</form>
-</body>
-</html>`)
-	if err != nil {
-		panic(err)
-	}
-	t.Execute(w, names)
 }
