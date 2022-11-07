@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+Username: {{ . }}
+</body>
+<body>
+Please select file to upload, one file only.
+</body>
+<body>
+<form method="post" action="/uploadone?uname={{ . }}" enctype="multipart/form-data">
+    <input type="file" name="file" multiple="multiple" />
+    <input type="submit" value="上传">
+</form>
+</body>
+</html>
