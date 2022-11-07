@@ -24,7 +24,6 @@ func main() {
 
 	http.HandleFunc("/", handlePage)
 	http.HandleFunc("/upload", handleUploadPage)
-	//http.HandleFunc("/upload", uploadOne)
 	http.HandleFunc("/uploadone", uploadOne)
 	http.ListenAndServe("127.0.0.1:8099", nil)
 }
