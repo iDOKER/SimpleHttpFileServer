@@ -16,8 +16,7 @@ var uploadDir string = "/data/docker/data/volumes/owncloud-docker-server_files/_
 
 func main() {
 	fmt.Println("Hi, There!")
-	//flag.StringVar(&baseDir, "base", "/opt", "Share files in this directory")
-	//flag.StringVar(&uploadDir, "upload", "/Users/stan/Downloads", "Upload files to this directory")
+	// flag.StringVar(&uploadDir, "upload", "/Users/stan/Downloads", "Upload files to this directory")
 	flag.Parse()
 
 	http.HandleFunc("/", handlePage)
@@ -26,8 +25,6 @@ func main() {
 }
 
 func handlePage(res http.ResponseWriter, req *http.Request) {
-	//uri := r.RequestURI
-	//fmt.Fprintf(w, uri)
 	key := req.FormValue("key")
 	fmt.Fprintf(res, key)
 }
