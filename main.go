@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 )
@@ -21,12 +23,22 @@ func main() {
 
 	http.HandleFunc("/", handlePage)
 	http.HandleFunc("/upload", handleUploadPage)
-	http.ListenAndServe("127.0.0.1:8099", nil)
+	err := http.ListenAndServe("127.0.0.1:8099", nil)
+	if err != nil {
+		return
+	}
 }
 
 func handlePage(res http.ResponseWriter, req *http.Request) {
 	key := req.FormValue("key")
-	fmt.Fprintf(res, key)
+	if key == "" {
+		http.Error(res, "Key is empty", http.StatusBadRequest)
+		return
+	}
+	_, err := res.Write([]byte(key))
+	if err != nil {
+		http.Error(res, "Error writing response", http.StatusInternalServerError)
+	}
 }
 
 func handleUploadPage(w http.ResponseWriter, r *http.Request) {
@@ -38,26 +50,57 @@ func handleUploadPage(w http.ResponseWriter, r *http.Request) {
 	//判断请求方式
 	if r.Method == "POST" {
 		//设置内存大小
-		r.ParseMultipartForm(32 << 20)
-		w.Write([]byte("System Setup ok."))
+		err := r.ParseMultipartForm(32 << 20)
+		if err != nil {
+			http.Error(w, "Error parsing form data", http.StatusBadRequest)
+			return
+		}
+		_, err = w.Write([]byte("System Setup ok."))
+		if err != nil {
+			return
+		}
 		//获取上传的第一个文件
 		file, header, err := r.FormFile("file")
 		// 判断文件有效性
 		if err != nil {
-			w.Write([]byte("File check error"))
+			http.Error(w, "Error retrieving file", http.StatusBadRequest)
+			return
 		} else {
-			defer file.Close()
+			defer func(file multipart.File) {
+				err := file.Close()
+				if err != nil {
+					log.Print(err)
+				}
+			}(file)
 			//创建上传目录
-			os.Mkdir(uploadDir, os.ModePerm)
+			err := os.Mkdir(uploadDir, os.ModePerm)
+			if err != nil {
+				return
+			}
 			//创建上传文件
 			cur, err := os.Create(uploadDir + UserName + "/files/" + header.Filename)
 			if err != nil {
 				println(err.Error())
+				http.Error(w, "Error creating file", http.StatusInternalServerError)
+				return
 			} else {
-				defer cur.Close()
+				defer func(cur *os.File) {
+					err := cur.Close()
+					if err != nil {
+						log.Print(err)
+					}
+				}(cur)
 				//把上传文件数据拷贝到我们新建的文件
-				io.Copy(cur, file)
-				w.Write([]byte("Upload SUCCESS"))
+				_, err = io.Copy(cur, file)
+				if err != nil {
+					http.Error(w, "Error copying file", http.StatusInternalServerError)
+					return
+				}
+				_, err = w.Write([]byte("Upload SUCCESS"))
+				if err != nil {
+					http.Error(w, "Error writing response", http.StatusInternalServerError)
+					return
+				}
 				SysFlag = 1
 			}
 		}
