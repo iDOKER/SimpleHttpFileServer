@@ -56,7 +56,7 @@ jobs:
         with:
           name: Latest Release          # Release 名称
           tag_name: latest              # 固定的 tag 名称
-          files: dist/*                 # 上传的文件
+          files: dist/**/*              # 上传的文件
           prerelease: false
           body: |
             Automated build from the main branch.
