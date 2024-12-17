@@ -1,12 +1,5 @@
-# Application
-./config
-./logs
-./.DS_Store
-./backup/*
-./data/*
-./logs/*
-./target/*
-.idea/*
+# Application.DS_Store
+target/*
 
 # General
 .DS_Store
