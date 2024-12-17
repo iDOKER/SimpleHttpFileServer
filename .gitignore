@@ -1,5 +1,6 @@
 # Application
-./target/*
+target/*
+target/build_*
 
 # General
 .DS_Store
